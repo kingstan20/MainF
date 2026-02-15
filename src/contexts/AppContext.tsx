@@ -3,9 +3,11 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { User, Post, PostType } from '@/lib/types';
+import { User, Post } from '@/lib/types';
 import { seedUsers, seedPosts } from '@/lib/seed';
 import { useToast } from '@/hooks/use-toast';
+
+type Theme = 'light' | 'dark';
 
 interface AppContextType {
   // State
@@ -14,6 +16,7 @@ interface AppContextType {
   currentUser: User | null;
   isAuthenticated: boolean;
   loading: boolean;
+  theme: Theme;
 
   // Auth Actions
   login: (email: string, password_plaintext: string) => boolean;
@@ -28,6 +31,9 @@ interface AppContextType {
 
   // Getters
   getUserById: (userId: string) => User | undefined;
+
+  // Theme
+  toggleTheme: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -40,6 +46,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [users, setUsers] = useLocalStorage<User[]>('hackmate-users', []);
   const [posts, setPosts] = useLocalStorage<Post[]>('hackmate-posts', []);
   const [sessionId, setSessionId] = useLocalStorage<string | null>('hackmate-session', null);
+  const [theme, setTheme] = useLocalStorage<Theme>('hackmate-theme', 'dark');
   
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
@@ -62,6 +69,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
     setLoading(false);
   }, [sessionId, users]);
+
+  useEffect(() => {
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(theme);
+  }, [theme]);
   
   const login = (email: string, password_plaintext: string): boolean => {
     const user = users.find(u => u.email === email && u.password_plaintext === password_plaintext);
@@ -140,12 +152,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const getUserById = (userId: string) => users.find(u => u.id === userId);
 
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
   const value = {
     users,
     posts,
     currentUser,
     isAuthenticated: !!currentUser,
     loading,
+    theme,
     login,
     logout,
     register,
@@ -154,6 +171,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     incrementView,
     addReaction,
     getUserById,
+    toggleTheme,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -19,7 +19,7 @@ const passwordSchema = z.object({
 });
 
 export default function SettingsPage() {
-  const { currentUser, updateUser } = useAppContext();
+  const { currentUser, updateUser, theme, toggleTheme } = useAppContext();
   const { toast } = useToast();
 
   const passwordForm = useForm<z.infer<typeof passwordSchema>>({
@@ -92,12 +92,24 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
       
-      <Card className="glowing-border">
+       <Card className="glowing-border">
         <CardHeader>
-          <CardTitle>Privacy</CardTitle>
-          <CardDescription>Control who can see your profile and activity.</CardDescription>
+          <CardTitle>Preferences</CardTitle>
+          <CardDescription>Customize the look and feel of HackMate.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h3 className="font-medium">Dark Mode</h3>
+                    <p className="text-sm text-muted-foreground">Toggle the cyber-themed dark interface.</p>
+                </div>
+                <Switch
+                    checked={theme === 'dark'}
+                    onCheckedChange={toggleTheme}
+                    aria-label="Toggle dark mode"
+                />
+            </div>
+             <Separator />
             <div className="flex items-center justify-between">
                 <div>
                     <h3 className="font-medium">Private Profile</h3>
@@ -106,6 +118,7 @@ export default function SettingsPage() {
                 <Switch
                     checked={currentUser.privacy === 'private'}
                     onCheckedChange={handlePrivacyToggle}
+                    aria-label="Toggle private profile"
                 />
             </div>
         </CardContent>
