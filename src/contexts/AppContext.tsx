@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { User as FirebaseUser } from 'firebase/auth';
+import { User as FirebaseUser, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import {
   collection,
   doc,
@@ -20,7 +20,6 @@ import {
   useFirestore,
   useUser,
   useCollection,
-  initiateEmailSignIn,
   addDocumentNonBlocking,
   updateDocumentNonBlocking,
   useMemoFirebase,
@@ -38,7 +37,7 @@ interface AppContextType {
   loading: boolean;
 
   // Auth Actions
-  login: (email: string, password_plaintext: string) => void;
+  login: (email: string, password_plaintext: string) => Promise<void>;
   logout: () => void;
   register: (userData: Omit<User, 'id' | 'privacy' | 'hackathonsAttended' | 'collaborations' | 'wins' | 'createdAt' | 'updatedAt'> & { password_plaintext: string }) => Promise<void>;
   updateUser: (updatedData: Partial<User>) => void;
@@ -63,12 +62,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const { user: firebaseUser, isUserLoading: isAuthLoading } = useUser();
 
-  const postsQuery = useMemoFirebase(() => collection(firestore, 'posts'), [firestore]);
+  const postsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'posts') : null, [firestore]);
   const { data: postsData, isLoading: isPostsLoading } = useCollection<Post>(
     postsQuery
   );
   
-  const usersQuery = useMemoFirebase(() => collection(firestore, 'users'), [firestore]);
+  const usersQuery = useMemoFirebase(() => firestore ? collection(firestore, 'users') : null, [firestore]);
   const { data: usersData, isLoading: isUsersLoading } = useCollection<User>(
     usersQuery
   );
@@ -80,20 +79,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const loading = isAuthLoading || isPostsLoading || isUsersLoading;
 
-  const login = (email: string, password_plaintext: string) => {
-    initiateEmailSignIn(auth, email, password_plaintext);
-    toast({ title: "Login Initiated", description: "Redirecting to your feed..." });
-    router.push('/feed');
+  const login = async (email: string, password_plaintext: string) => {
+    if (!auth) return;
+    try {
+      await signInWithEmailAndPassword(auth, email, password_plaintext);
+      toast({ title: "Login Successful", description: "Redirecting to your feed..." });
+      router.push('/feed');
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: error.message,
+      });
+    }
   };
 
   const logout = async () => {
+    if (!auth) return;
     await auth.signOut();
     router.push('/');
   };
 
   const register = async (userData: Omit<User, 'id' | 'privacy' | 'hackathonsAttended' | 'collaborations' | 'wins' | 'createdAt' | 'updatedAt'> & { password_plaintext: string }) => {
+    if (!auth || !firestore) return;
     try {
-      const userCredential = await auth.createUserWithEmailAndPassword(userData.email, userData.password_plaintext);
+      const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password_plaintext);
       const user = userCredential.user;
       if (user) {
         const newUserProfile: Omit<User, 'id'> = {
@@ -117,13 +127,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateUser = (updatedData: Partial<User>) => {
-    if (!currentUserProfile) return;
+    if (!currentUserProfile || !firestore) return;
     const userRef = doc(firestore, 'users', currentUserProfile.id);
     updateDocumentNonBlocking(userRef, { ...updatedData, updatedAt: serverTimestamp() });
   };
   
   const addPost = (postData: Omit<Post, 'id' | 'authorId' | 'authorName' | 'createdAt' | 'updatedAt' | 'views' | 'reactions'>) => {
-    if(!currentUserProfile) {
+    if(!currentUserProfile || !firestore) {
         toast({ variant: "destructive", title: "Error", description: "You must be logged in to post." });
         return;
     }
@@ -141,6 +151,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const incrementView = useCallback((postId: string) => {
+    if (!firestore) return;
     // This is more complex with Firestore to avoid spamming updates.
     // For now, we'll keep it simple and update. A better solution would use server-side logic.
     const postRef = doc(firestore, 'posts', postId);
@@ -149,7 +160,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [firestore]);
   
   const addReaction = (postId: string, reactionType: keyof Post['reactions']) => {
-    if (!postsData) return;
+    if (!postsData || !firestore) return;
     const post = postsData.find(p => p.id === postId);
     if (!post) return;
     const postRef = doc(firestore, 'posts', postId);
@@ -160,7 +171,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const startChat = async (postAuthorId: string): Promise<string | null> => {
-    if (!firebaseUser) {
+    if (!firebaseUser || !firestore) {
       toast({ variant: "destructive", title: "Not Authenticated", description: "You must be logged in to start a chat." });
       return null;
     }
