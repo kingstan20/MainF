@@ -22,7 +22,7 @@ const PostCardHeader = ({ post }: { post: Post }) => {
   const timeAgo = post.createdAt ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) : 'just now';
   
   const postTypeToTag: { [key in PostType]: string } = {
-    HACKATHON: 'HackathonUpcoming',
+    HACKATHON: 'UpcomingHackathon',
     TEAMMATE: 'NeedForTeamMember',
     COLLABORATION: 'GotProjectIdea',
     FAME: 'HallOfFame',
