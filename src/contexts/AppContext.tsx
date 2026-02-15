@@ -15,7 +15,7 @@ interface AppContextType {
   loading: boolean;
   login: (email: string, password_plaintext: string) => Promise<void>;
   logout: () => void;
-  register: (userData: Omit<User, 'id' | 'privacy' | 'hackathonsAttended' | 'collaborations' | 'wins'>) => Promise<void>;
+  register: (userData: Omit<User, 'id' | 'privacy' | 'hackathonsAttended' | 'collaborations' | 'wins' | 'skills'>) => Promise<void>;
   updateUser: (userId: string, updatedData: Partial<User>) => void;
   addPost: (postData: Omit<Post, 'id' | 'authorId' | 'authorName' | 'authorAvatarUrl' | 'createdAt' | 'views' | 'reactions'>) => void;
   incrementView: (postId: string) => void;
@@ -61,7 +61,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     router.push('/');
   };
 
-  const register = async (userData: Omit<User, 'id' | 'privacy' | 'hackathonsAttended' | 'collaborations' | 'wins'>) => {
+  const register = async (userData: Omit<User, 'id' | 'privacy' | 'hackathonsAttended' | 'collaborations' | 'wins' | 'skills'>) => {
     const existingUser = users.find(u => u.email === userData.email);
     if (existingUser) {
       toast({ variant: "destructive", title: "Registration Failed", description: "An account with this email already exists." });
@@ -75,6 +75,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       hackathonsAttended: [],
       collaborations: 0,
       wins: 0,
+      skills: [],
     };
     
     setUsers(prevUsers => [...prevUsers, newUser]);

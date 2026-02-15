@@ -10,6 +10,7 @@ import { PostGrid } from "@/components/feed/PostGrid";
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from "react";
 import type { User } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
 
 export default function UserProfilePage() {
     const { getUserById, currentUserProfile, posts, startChat } = useAppContext();
@@ -109,6 +110,21 @@ export default function UserProfilePage() {
                     </Card>
                 ))}
             </div>
+
+            {user.skills && user.skills.length > 0 && (
+                <Card className="glowing-border-hover">
+                    <CardHeader>
+                        <CardTitle className="text-lg">Skills</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                            {user.skills.map(skill => (
+                                <Badge key={skill} variant="secondary">{skill}</Badge>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             <div>
                 <h2 className="text-2xl font-bold tracking-tighter mb-4">{`${user.name}'s Posts`}</h2>

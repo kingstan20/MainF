@@ -5,6 +5,7 @@ export interface User {
   github: string;
   password_plaintext?: string;
   avatarUrl?: string;
+  skills?: string[];
   privacy: 'public' | 'private';
   hackathonsAttended: string[];
   collaborations: number;

@@ -24,11 +24,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { useToast } from "@/hooks/use-toast";
 import React, { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   github: z.string().min(1, "GitHub username is required."),
   avatarUrl: z.string().optional(),
+  skills: z.string().optional(),
 });
 
 const EditProfileDialog = () => {
@@ -42,6 +44,7 @@ const EditProfileDialog = () => {
       name: currentUserProfile?.name || "",
       github: currentUserProfile?.github || "",
       avatarUrl: currentUserProfile?.avatarUrl || "",
+      skills: currentUserProfile?.skills?.join(', ') || "",
     },
   });
 
@@ -62,7 +65,13 @@ const EditProfileDialog = () => {
 
   const onSubmit = (values: z.infer<typeof profileSchema>) => {
     if (currentUserProfile) {
-      updateUser(currentUserProfile.id, values);
+      const updatedData = {
+          name: values.name,
+          github: values.github,
+          avatarUrl: values.avatarUrl,
+          skills: values.skills ? values.skills.split(',').map(s => s.trim()) : [],
+      };
+      updateUser(currentUserProfile.id, updatedData);
       toast({ title: "Profile Updated", description: "Your changes have been saved." });
     }
     setOpen(false);
@@ -98,6 +107,17 @@ const EditProfileDialog = () => {
                 <FormItem>
                   <FormLabel>GitHub</FormLabel>
                   <FormControl><Input {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="skills"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Skills (comma-separated)</FormLabel>
+                  <FormControl><Input placeholder="React, Python, Java" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -183,6 +203,21 @@ export default function ProfilePage() {
           </Card>
         ))}
       </div>
+
+      {currentUserProfile.skills && currentUserProfile.skills.length > 0 && (
+        <Card className="glowing-border-hover">
+            <CardHeader>
+                <CardTitle className="text-lg">Skills</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="flex flex-wrap gap-2">
+                    {currentUserProfile.skills.map(skill => (
+                        <Badge key={skill} variant="secondary">{skill}</Badge>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+      )}
 
       <div>
         <h2 className="text-2xl font-bold tracking-tighter mb-4">My Posts</h2>
