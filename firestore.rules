@@ -1,181 +1,47 @@
-/**
- * Core Philosophy: This ruleset establishes a flexible yet secure model for a social application.
- * It combines public-read access for community content (posts, reactions) with strict,
- * participant-only access for private data (chats, messages). User profiles are owner-controlled.
- * The primary goal is to enforce authorization without enforcing a rigid data schema,
- * allowing for rapid prototyping and iteration.
- *
- * Data Structure:
- * - /users/{userId}: Private, owner-controlled user profiles.
- * - /posts/{postId}: A top-level collection for public posts.
- * - /posts/{postId}/reactions/{reactionId}: A subcollection for public reactions to posts.
- * - /chats/{chatId}: A top-level collection for private conversations between specific users.
- * - /chats/{chatId}/messages/{messageId}: A subcollection for messages within a private chat.
- *
- * Key Security Decisions:
- * - User Enumeration Disabled: Listing users from the top-level `/users` collection is disabled to protect user privacy.
- * - Public Content Model: All posts and their reactions are publicly readable to facilitate content discovery and engagement.
- *   Writes are strictly limited to the content's original author.
- * - Collaborative Chat Model: Chats are secured using a `participantIds` array on each `/chats/{chatId}` document.
- *   Only users whose UID is in this array can read the chat info or its messages.
- * - Default Secure: Any operation not explicitly granted is denied. Destructive operations (update, delete)
- *   are always checked to ensure the document exists before proceeding.
- *
- * Denormalization for Authorization:
- * - Posts & Reactions: Every `post` document contains an `authorId` and every `reaction` contains a `userId`.
- *   This allows for simple, fast, and cheap ownership checks for all write operations without needing to read other documents.
- * - Chats: Each `chat` document contains a `participantIds` array, making it the single source of truth for
- *   authorizing access to the chat and its message subcollection.
- *
- * Structural Segregation:
- * - The separation of public content into `/posts` and private conversations into `/chats` provides a clean and
- *   secure boundary. This prevents accidental data leakage and allows for efficient, secure list operations on
- *   public data without complex filtering rules.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --------------------------------------------------------------------------------
-    // Helper Functions
-    // --------------------------------------------------------------------------------
-
-    /**
-     * isSignedIn
-     * Checks if the user is authenticated.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * isOwner
-     * Checks if the authenticated user's UID matches the provided userId.
-     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
     
-    /**
-     * isExistingDoc
-     * Checks if a document currently exists. Used for safe updates and deletes.
-     */
     function isExistingDoc() {
       return resource != null;
     }
 
-    /**
-     * isChatParticipant
-     * Checks if the currently authenticated user is a participant in a given chat document.
-     */
-    function isChatParticipant(chatResource) {
-      return isSignedIn() && request.auth.uid in chatResource.data.participantIds;
-    }
-
-    /**
-     * isParentChatParticipant
-     * Checks if the user is a participant of the parent chat document using a get() call.
-     * Necessary for securing subcollections like messages.
-     */
-    function isParentChatParticipant(chatId) {
-      let chatDoc = get(/databases/$(database)/documents/chats/$(chatId));
-      return isChatParticipant(chatDoc);
+    function isChatParticipant() {
+      return isSignedIn() && request.auth.uid in resource.data.members;
     }
     
-    /**
-     * isSender
-     * Checks if the authenticated user is the sender of a message.
-     */
-    function isSender(messageResource) {
-       return isSignedIn() && request.auth.uid == messageResource.data.senderId;
-    }
-
-    // --------------------------------------------------------------------------------
-    // Collection Rules
-    // --------------------------------------------------------------------------------
-
-    /**
-     * @description Controls access to user profile documents.
-     * @path /users/{userId}
-     * @allow (get) Any user can view any other user's profile.
-     * @allow (create) An authenticated user can create their own profile document, where `{userId}` matches their UID.
-     * @deny (list) Listing all users is forbidden to prevent user enumeration and protect privacy.
-     * @deny (update) A user tries to update a profile that is not their own.
-     * @principle Restricts access to a user's own data tree for writes, while allowing public reads of profiles.
-     */
     match /users/{userId} {
-      allow get: if true;
-      allow list: if false;
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isOwner(userId) && isExistingDoc() && request.resource.data.id == resource.data.id;
-      allow delete: if false;
+      allow read;
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && isExistingDoc();
     }
 
-    /**
-     * @description Controls access to public posts.
-     * @path /posts/{postId}
-     * @allow (get, list) Any user, signed in or not, can read and list all posts.
-     * @allow (create) An authenticated user creates a post and correctly sets their own UID as the `authorId`.
-     * @deny (update) An authenticated user tries to update a post they did not create.
-     * @deny (create) An authenticated user tries to create a post but sets the `authorId` to another user's UID.
-     * @principle Implements a "Public Read with Owner-Only Writes" pattern.
-     */
     match /posts/{postId} {
-      allow get: if true;
-      allow list: if true;
+      allow read;
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update: if isOwner(resource.data.authorId) && isExistingDoc();
+      allow update: if isSignedIn() && (
+        (isOwner(resource.data.authorId) && isExistingDoc()) ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'views'])
+      );
       allow delete: if isOwner(resource.data.authorId) && isExistingDoc();
     }
 
-    /**
-     * @description Controls access to reactions on posts.
-     * @path /posts/{postId}/reactions/{reactionId}
-     * @allow (get, list) Any user, signed in or not, can read and list all reactions on a post.
-     * @allow (create) An authenticated user creates a reaction, setting their own `userId`.
-     * @deny (delete) A user tries to delete a reaction left by someone else.
-     * @principle Enforces document ownership for writes. Ensures relational integrity by validating the `userId` on creation.
-     */
-    match /posts/{postId}/reactions/{reactionId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isOwner(resource.data.userId) && isExistingDoc();
-      allow delete: if isOwner(resource.data.userId) && isExistingDoc();
-    }
-
-    /**
-     * @description Controls access to private chat conversations.
-     * @path /chats/{chatId}
-     * @allow (get) A user who is listed in the `participantIds` array can read the chat document.
-     * @allow (create) A signed-in user creates a new chat and includes their own UID in the `participantIds` list.
-     * @deny (get) A user tries to read a chat document they are not a participant of.
-     * @deny (list) Listing all chats is forbidden to prevent discovery of private conversations. Client must query by participation.
-     * @principle Implements a "Shared Access (Closed Collaborators)" pattern based on the `participantIds` array.
-     */
     match /chats/{chatId} {
-      allow get: if isChatParticipant(resource);
-      allow list: if false; // Deny direct listing; client must query with `where('participantIds', 'array-contains', auth.uid)`
+      allow read, update: if isChatParticipant();
       allow create: if isSignedIn() && request.auth.uid in request.resource.data.participantIds;
-      allow update: if isChatParticipant(resource) && isExistingDoc();
-      allow delete: if false; // Disallow deleting entire chat threads for now.
     }
 
-    /**
-     * @description Controls access to individual messages within a private chat.
-     * @path /chats/{chatId}/messages/{messageId}
-     * @allow (get, list) A user can read or list messages if they are a participant of the parent chat.
-     * @allow (create) A chat participant can send a new message.
-     * @deny (get) A user tries to read a message in a chat they do not belong to.
-     * @deny (delete) A user tries to delete a message they did not send.
-     * @principle Access is derived from the parent document. This requires a `get()` call to check the parent chat's participant list.
-     */
     match /chats/{chatId}/messages/{messageId} {
-      allow get: if isParentChatParticipant(chatId);
-      allow list: if isParentChatParticipant(chatId);
-      allow create: if isParentChatParticipant(chatId) && request.resource.data.senderId == request.auth.uid;
-      allow update: if isSender(resource) && isExistingDoc();
-      allow delete: if isSender(resource) && isExistingDoc();
+      allow list, read: if get(/databases/$(database)/documents/chats/$(chatId)).data.members[request.auth.uid] == true;
+      allow create: if get(/databases/$(database)/documents/chats/$(chatId)).data.members[request.auth.uid] == true && request.resource.data.senderId == request.auth.uid;
     }
   }
 }

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { AppProvider } from '@/contexts/AppContext';
 import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
+import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
   title: 'HackMate',
@@ -21,9 +22,11 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <AppProvider>
-          {children}
-        </AppProvider>
+        <FirebaseClientProvider>
+          <AppProvider>
+            {children}
+          </AppProvider>
+        </FirebaseClientProvider>
         <Toaster />
       </body>
     </html>

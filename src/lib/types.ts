@@ -1,13 +1,16 @@
+import { Timestamp } from 'firebase/firestore';
+
 export interface User {
   id: string;
   name: string;
   email: string;
   github: string;
-  password_plaintext: string; // As requested for demo
   privacy: 'public' | 'private';
   hackathonsAttended: string[];
   collaborations: number;
   wins: number;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export type PostType = 'HACKATHON' | 'TEAMMATE' | 'COLLABORATION' | 'FAME';
@@ -18,7 +21,8 @@ export interface BasePost {
   authorName: string;
   type: PostType;
   description: string;
-  createdAt: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
   views: number;
   reactions: {
     chat: number;
@@ -57,3 +61,21 @@ export interface FamePost extends BasePost {
 }
 
 export type Post = HackathonPost | TeammatePost | CollaborationPost | FamePost;
+
+export interface Chat {
+    id: string;
+    participantIds: string[];
+    members: { [key: string]: boolean };
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+    lastMessage?: string;
+}
+
+export interface Message {
+    id: string;
+    chatId: string;
+    senderId: string;
+    content: string;
+    createdAt: Timestamp;
+    senderName: string;
+}

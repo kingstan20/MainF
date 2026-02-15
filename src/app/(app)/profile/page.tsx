@@ -4,7 +4,7 @@ import { useAppContext } from "@/contexts/AppContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Github, Mail, User, Award, Users, CalendarDays, Loader2 } from "lucide-react";
+import { Github, Mail, Award, Users, CalendarDays, Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { PostGrid } from "@/components/feed/PostGrid";
 import {
@@ -31,15 +31,15 @@ const profileSchema = z.object({
 });
 
 const EditProfileDialog = () => {
-  const { currentUser, updateUser } = useAppContext();
+  const { currentUserProfile, updateUser } = useAppContext();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: currentUser?.name || "",
-      github: currentUser?.github || "",
+      name: currentUserProfile?.name || "",
+      github: currentUserProfile?.github || "",
     },
   });
 
@@ -96,18 +96,18 @@ const EditProfileDialog = () => {
 
 
 export default function ProfilePage() {
-  const { currentUser, posts } = useAppContext();
+  const { currentUserProfile, posts } = useAppContext();
 
-  if (!currentUser) {
+  if (!currentUserProfile) {
     return <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin"/></div>;
   }
 
-  const userPosts = posts.filter(p => p.authorId === currentUser.id);
+  const userPosts = posts.filter(p => p.authorId === currentUserProfile.id);
 
   const stats = [
-    { name: "Hackathons", value: currentUser.hackathonsAttended.length, icon: CalendarDays },
-    { name: "Collaborations", value: currentUser.collaborations, icon: Users },
-    { name: "Wins", value: currentUser.wins, icon: Award },
+    { name: "Hackathons", value: currentUserProfile.hackathonsAttended.length, icon: CalendarDays },
+    { name: "Collaborations", value: currentUserProfile.collaborations, icon: Users },
+    { name: "Wins", value: currentUserProfile.wins, icon: Award },
   ];
 
   return (
@@ -117,15 +117,15 @@ export default function ProfilePage() {
           <div className="flex flex-col md:flex-row items-center gap-6">
             <Avatar className="h-24 w-24 border-4 border-primary">
               <AvatarFallback className="text-4xl bg-primary/10 text-primary">
-                {currentUser.name.charAt(0)}
+                {currentUserProfile.name.charAt(0)}
               </AvatarFallback>
             </Avatar>
             <div className="flex-grow text-center md:text-left">
-              <h1 className="text-3xl font-bold">{currentUser.name}</h1>
-              <p className="text-sm text-muted-foreground">User ID: {currentUser.id}</p>
+              <h1 className="text-3xl font-bold">{currentUserProfile.name}</h1>
+              <p className="text-sm text-muted-foreground">User ID: {currentUserProfile.id}</p>
               <div className="mt-2 flex flex-wrap justify-center md:justify-start gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1"><Mail className="h-4 w-4" /> {currentUser.email}</span>
-                <a href={`https://github.com/${currentUser.github}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary"><Github className="h-4 w-4" /> {currentUser.github}</a>
+                <span className="flex items-center gap-1"><Mail className="h-4 w-4" /> {currentUserProfile.email}</span>
+                <a href={`https://github.com/${currentUserProfile.github}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary"><Github className="h-4 w-4" /> {currentUserProfile.github}</a>
               </div>
             </div>
             <EditProfileDialog />

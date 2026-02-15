@@ -15,29 +15,12 @@ import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { useAppContext } from '@/contexts/AppContext';
 import { Eye, MapPin, Users, Lightbulb, Trophy } from 'lucide-react';
+import { Timestamp } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
-import { useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
-
-const getPostTitle = (post: Post): string => {
-    switch (post.type) {
-        case 'HACKATHON':
-            return `Hackathon at ${post.venue}`;
-        case 'TEAMMATE':
-            return `Looking for teammates for ${post.venue}`;
-        case 'COLLABORATION':
-            return `Collaboration on: ${post.idea}`;
-        case 'FAME':
-            return `Achievement: ${post.achievement}`;
-        default:
-            return "A post on HackMate";
-    }
-}
+import { useEffect, useState } from 'react';
 
 const PostCardHeader = ({ post }: { post: Post }) => {
-  const { getUserById } = useAppContext();
-  const author = getUserById(post.authorId);
-  const timeAgo = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true });
+  const timeAgo = post.createdAt ? formatDistanceToNow(new Date((post.createdAt as Timestamp).toDate()), { addSuffix: true }) : 'just now';
   
   return (
     <CardHeader>
@@ -60,33 +43,13 @@ const PostCardHeader = ({ post }: { post: Post }) => {
 };
 
 const PostCardFooter = ({ post }: { post: Post }) => {
-  const { addReaction, getUserById, currentUser } = useAppContext();
-  const { toast } = useToast();
-  const author = getUserById(post.authorId);
+  const { addReaction, startChat } = useAppContext();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChatClick = () => {
-    addReaction(post.id, 'chat');
-
-    if (!author || !currentUser) {
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Could not find user information to start a chat.",
-        });
-        return;
-    }
-
-    if (author.id === currentUser.id) {
-        toast({
-            title: "Let's not talk to ourselves",
-            description: "You can't start a chat about your own post.",
-        });
-        return;
-    }
-
-    const subject = `Re: Your HackMate Post ("${getPostTitle(post)}")`;
-    const body = `Hi ${author.name},\n\nI saw your post on HackMate and I'm interested in chatting.\n\n(This is an automated message from HackMate)`;
-    window.location.href = `mailto:${author.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  const handleChatClick = async () => {
+    setIsSubmitting(true);
+    await startChat(post.authorId);
+    setIsSubmitting(false);
   };
   
   return (
@@ -98,14 +61,14 @@ const PostCardFooter = ({ post }: { post: Post }) => {
             </div>
         </div>
         <div className="flex w-full flex-wrap items-center justify-start gap-2">
-            <Button variant="outline" size="sm" onClick={handleChatClick}>
-                <Icons.chat className="mr-2 h-4 w-4" /> Chat ({post.reactions.chat})
+            <Button variant="outline" size="sm" onClick={handleChatClick} disabled={isSubmitting}>
+                <Icons.chat className="mr-2 h-4 w-4" /> Chat ({post.reactions.chat || 0})
             </Button>
             <Button variant="outline" size="sm" onClick={() => addReaction(post.id, 'congrats')}>
-                <Icons.congrats className="mr-2 h-4 w-4" /> Congrats ({post.reactions.congrats})
+                <Icons.congrats className="mr-2 h-4 w-4" /> Congrats ({post.reactions.congrats || 0})
             </Button>
             <Button variant="outline" size="sm" onClick={() => addReaction(post.id, 'bestOfLuck')}>
-                <Icons.bestOfLuck className="mr-2 h-4 w-4" /> Luck ({post.reactions.bestOfLuck})
+                <Icons.bestOfLuck className="mr-2 h-4 w-4" /> Luck ({post.reactions.bestOfLuck || 0})
             </Button>
       </div>
     </CardFooter>
@@ -186,7 +149,7 @@ export function PostCard({ post }: { post: Post }) {
     // A simple view incrementer. In a real app, this would be more robust.
     const timeout = setTimeout(() => {
       incrementView(post.id);
-    }, 2000); // Increment view after 2 seconds to avoid accidental counts
+    }, 5000); // Increment view after 5 seconds to avoid accidental counts
     return () => clearTimeout(timeout);
   }, [post.id, incrementView]);
 

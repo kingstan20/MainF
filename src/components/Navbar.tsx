@@ -6,7 +6,7 @@ import { useAppContext } from '@/contexts/AppContext';
 import { CreatePostModal } from './feed/CreatePostModal';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { PlusCircle } from 'lucide-react';
+import { MessageCircle, PlusCircle } from 'lucide-react';
 
 export function Navbar() {
   const { logout } = useAppContext();
@@ -14,6 +14,7 @@ export function Navbar() {
 
   const navItems = [
     { href: '/feed', label: 'Feed' },
+    { href: '/chats', label: 'Chats' },
     { href: '/profile', label: 'Profile' },
     { href: '/settings', label: 'Settings' },
   ];
@@ -32,7 +33,7 @@ export function Navbar() {
                 href={item.href}
                 className={cn(
                   'transition-colors hover:text-primary/80',
-                  pathname === item.href ? 'text-primary' : 'text-foreground/60'
+                  pathname.startsWith(item.href) ? 'text-primary' : 'text-foreground/60'
                 )}
               >
                 {item.label}

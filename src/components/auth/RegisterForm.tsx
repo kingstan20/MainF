@@ -14,8 +14,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAppContext } from "@/contexts/AppContext";
-import { useRouter } from "next/navigation";
-import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
@@ -27,8 +25,6 @@ const formSchema = z.object({
 
 export function RegisterForm() {
   const { register } = useAppContext();
-  const router = useRouter();
-  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -39,27 +35,13 @@ export function RegisterForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    const success = register({
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    await register({
         name: values.name,
         email: values.email,
         github: values.github,
         password_plaintext: values.password
     });
-
-    if (success) {
-      toast({
-        title: "Registration Successful",
-        description: "Welcome to HackMate! Redirecting to your feed...",
-      });
-      router.push("/feed");
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Registration Failed",
-        description: "An account with this email already exists.",
-      });
-    }
   }
 
   return (
