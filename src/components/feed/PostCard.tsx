@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Post, HackathonPost, TeammatePost, CollaborationPost, FamePost } from '@/lib/types';
+import { Post, HackathonPost, TeammatePost, CollaborationPost, FamePost, PostType } from '@/lib/types';
 import { Button } from '../ui/button';
 import { Icons, PostTypeIcon } from '../Icons';
 import { Badge } from '../ui/badge';
@@ -20,9 +20,18 @@ import { formatDistanceToNow } from 'date-fns';
 const PostCardHeader = ({ post }: { post: Post }) => {
   const timeAgo = post.createdAt ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) : 'just now';
   
+  const postTypeToTag: { [key in PostType]: string } = {
+    HACKATHON: 'HackathonUpcoming',
+    TEAMMATE: 'NeedForTeamMember',
+    COLLABORATION: 'GotProjectIdea',
+    FAME: 'HallOfFame',
+  };
+
+  const tag = postTypeToTag[post.type];
+
   return (
     <CardHeader>
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10 border-2 border-primary/50">
                 <AvatarFallback className="bg-primary/20 text-primary">
@@ -34,7 +43,10 @@ const PostCardHeader = ({ post }: { post: Post }) => {
                 <CardDescription suppressHydrationWarning>{timeAgo}</CardDescription>
             </div>
         </div>
-        <PostTypeIcon type={post.type} className="h-6 w-6 text-primary" />
+        <div className="flex flex-shrink-0 items-center gap-2">
+            <Badge variant="outline">{tag}</Badge>
+            <PostTypeIcon type={post.type} className="h-5 w-5 text-primary" />
+        </div>
       </div>
     </CardHeader>
   );
