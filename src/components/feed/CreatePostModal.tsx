@@ -62,15 +62,30 @@ const PostForm = ({ type, setOpen }: { type: PostType, setOpen: (open: boolean) 
     const { toast } = useToast();
     
     let schema: z.ZodObject<any>;
+    let defaultValues: Record<string, any> = {};
+
     switch (type) {
-        case 'HACKATHON': schema = hackathonSchema; break;
-        case 'TEAMMATE': schema = teammateSchema; break;
-        case 'COLLABORATION': schema = collaborationSchema; break;
-        case 'FAME': schema = fameSchema; break;
+        case 'HACKATHON': 
+            schema = hackathonSchema;
+            defaultValues = { venue: '', date: '', description: '' };
+            break;
+        case 'TEAMMATE': 
+            schema = teammateSchema;
+            defaultValues = { venue: '', date: '', currentTeam: '', requiredTeam: '', description: '' };
+            break;
+        case 'COLLABORATION': 
+            schema = collaborationSchema;
+            defaultValues = { idea: '', skills: '', teamCount: '', description: '' };
+            break;
+        case 'FAME': 
+            schema = fameSchema;
+            defaultValues = { venue: '', date: '', achievement: '', teamMembers: '', description: '' };
+            break;
     }
     
     const form = useForm({
         resolver: zodResolver(schema),
+        defaultValues,
     });
 
     const onSubmit = (data: any) => {
