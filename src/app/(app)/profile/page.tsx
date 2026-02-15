@@ -44,8 +44,10 @@ const EditProfileDialog = () => {
   });
 
   const onSubmit = (values: z.infer<typeof profileSchema>) => {
-    updateUser(values);
-    toast({ title: "Profile Updated", description: "Your changes have been saved." });
+    if (currentUserProfile) {
+      updateUser(currentUserProfile.id, values);
+      toast({ title: "Profile Updated", description: "Your changes have been saved." });
+    }
     setOpen(false);
   };
 
@@ -111,7 +113,7 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto w-full max-w-4xl space-y-8">
       <Card className="glowing-border">
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row items-center gap-6">
