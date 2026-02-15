@@ -71,11 +71,11 @@ const PostForm = ({ type, setOpen }: { type: PostType, setOpen: (open: boolean) 
             break;
         case 'TEAMMATE': 
             schema = teammateSchema;
-            defaultValues = { venue: '', date: '', currentTeam: '', requiredTeam: '', description: '' };
+            defaultValues = { venue: '', date: '', currentTeam: 1, requiredTeam: 2, description: '' };
             break;
         case 'COLLABORATION': 
             schema = collaborationSchema;
-            defaultValues = { idea: '', skills: '', teamCount: '', description: '' };
+            defaultValues = { idea: '', skills: '', teamCount: 1, description: '' };
             break;
         case 'FAME': 
             schema = fameSchema;
@@ -114,7 +114,7 @@ const PostForm = ({ type, setOpen }: { type: PostType, setOpen: (open: boolean) 
                 {type === 'TEAMMATE' && <>
                     <FormField control={form.control} name="venue" render={({ field }) => (<FormItem><FormLabel>Venue</FormLabel><FormControl><Input placeholder="e.g., Cyberia Hackathon" {...field} /></FormControl><FormMessage /></FormItem>)} />
                     <FormField control={form.control} name="date" render={({ field }) => (<FormItem><FormLabel>Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <FormField control={form.control} name="currentTeam" render={({ field }) => (<FormItem><FormLabel>Current Team</FormLabel><FormControl><Input type="number" placeholder="2" {...field} /></FormControl><FormMessage /></FormItem>)} />
                         <FormField control={form.control} name="requiredTeam" render={({ field }) => (<FormItem><FormLabel>Required Team</FormLabel><FormControl><Input type="number" placeholder="5" {...field} /></FormControl><FormMessage /></FormItem>)} />
                     </div>

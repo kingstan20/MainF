@@ -29,7 +29,7 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto w-full max-w-3xl space-y-8 px-4">
       <div>
-        <h1 className="text-3xl font-bold tracking-tighter">Settings</h1>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tighter">Settings</h1>
         <p className="text-muted-foreground">Manage your account and preferences.</p>
       </div>
 

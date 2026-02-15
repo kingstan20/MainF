@@ -123,7 +123,7 @@ export default function ProfilePage() {
               </AvatarFallback>
             </Avatar>
             <div className="flex-grow text-center md:text-left">
-              <h1 className="text-3xl font-bold">{currentUserProfile.name}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold">{currentUserProfile.name}</h1>
               <p className="text-sm text-muted-foreground">User ID: {currentUserProfile.id}</p>
               <div className="mt-2 flex flex-wrap justify-center md:justify-start gap-x-4 gap-y-1 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1"><Mail className="h-4 w-4" /> {currentUserProfile.email}</span>
