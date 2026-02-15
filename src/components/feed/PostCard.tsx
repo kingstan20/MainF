@@ -17,6 +17,22 @@ import { useAppContext } from '@/contexts/AppContext';
 import { Eye, MapPin, Users, Lightbulb, Trophy } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
+
+const getPostTitle = (post: Post): string => {
+    switch (post.type) {
+        case 'HACKATHON':
+            return `Hackathon at ${post.venue}`;
+        case 'TEAMMATE':
+            return `Looking for teammates for ${post.venue}`;
+        case 'COLLABORATION':
+            return `Collaboration on: ${post.idea}`;
+        case 'FAME':
+            return `Achievement: ${post.achievement}`;
+        default:
+            return "A post on HackMate";
+    }
+}
 
 const PostCardHeader = ({ post }: { post: Post }) => {
   const { getUserById } = useAppContext();
@@ -44,7 +60,34 @@ const PostCardHeader = ({ post }: { post: Post }) => {
 };
 
 const PostCardFooter = ({ post }: { post: Post }) => {
-  const { addReaction } = useAppContext();
+  const { addReaction, getUserById, currentUser } = useAppContext();
+  const { toast } = useToast();
+  const author = getUserById(post.authorId);
+
+  const handleChatClick = () => {
+    addReaction(post.id, 'chat');
+
+    if (!author || !currentUser) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not find user information to start a chat.",
+        });
+        return;
+    }
+
+    if (author.id === currentUser.id) {
+        toast({
+            title: "Let's not talk to ourselves",
+            description: "You can't start a chat about your own post.",
+        });
+        return;
+    }
+
+    const subject = `Re: Your HackMate Post ("${getPostTitle(post)}")`;
+    const body = `Hi ${author.name},\n\nI saw your post on HackMate and I'm interested in chatting.\n\n(This is an automated message from HackMate)`;
+    window.location.href = `mailto:${author.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
   
   return (
     <CardFooter className="flex-col items-start gap-4 p-4 pt-0">
@@ -55,7 +98,7 @@ const PostCardFooter = ({ post }: { post: Post }) => {
             </div>
         </div>
         <div className="flex w-full flex-wrap items-center justify-start gap-2">
-            <Button variant="outline" size="sm" onClick={() => addReaction(post.id, 'chat')}>
+            <Button variant="outline" size="sm" onClick={handleChatClick}>
                 <Icons.chat className="mr-2 h-4 w-4" /> Chat ({post.reactions.chat})
             </Button>
             <Button variant="outline" size="sm" onClick={() => addReaction(post.id, 'congrats')}>
@@ -71,10 +114,10 @@ const PostCardFooter = ({ post }: { post: Post }) => {
 
 const HackathonCard = ({ post }: { post: HackathonPost }) => (
   <>
-    <CardContent className="space-y-2">
+    <CardContent className="space-y-4">
         <div className="flex items-center gap-2 text-sm"><MapPin className="h-4 w-4 text-primary"/><span>{post.venue}</span></div>
         <div suppressHydrationWarning className="flex items-center gap-2 text-sm text-muted-foreground">📅 {new Date(post.date).toLocaleDateString()}</div>
-        <p>{post.description}</p>
+        <p className="text-sm text-muted-foreground">{post.description}</p>
     </CardContent>
     <PostCardFooter post={post} />
   </>
@@ -82,13 +125,13 @@ const HackathonCard = ({ post }: { post: HackathonPost }) => (
 
 const TeammateCard = ({ post }: { post: TeammatePost }) => (
   <>
-    <CardContent className="space-y-2">
+    <CardContent className="space-y-4">
       <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm"><MapPin className="h-4 w-4 text-primary"/><span>{post.venue}</span></div>
           <Badge variant="secondary">{post.currentTeam}/{post.requiredTeam} Members</Badge>
       </div>
       <div suppressHydrationWarning className="flex items-center gap-2 text-sm text-muted-foreground">📅 {new Date(post.date).toLocaleDateString()}</div>
-      <p>{post.description}</p>
+      <p className="text-sm text-muted-foreground">{post.description}</p>
     </CardContent>
     <PostCardFooter post={post} />
   </>
@@ -103,13 +146,13 @@ const CollaborationCard = ({ post }: { post: CollaborationPost }) => (
       </div>
       <div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">🛠 Skills Required</div>
-        <div className="flex flex-wrap gap-2 pt-2">
+        <div className="mt-2 flex flex-wrap gap-2">
           {post.skills.map(skill => <Badge key={skill} variant="outline">{skill}</Badge>)}
         </div>
       </div>
       <div className="space-y-1">
         <div className="flex items-center gap-2 text-sm text-muted-foreground"><Users className="h-4 w-4 text-primary" /> Team</div>
-        <p>{post.description}</p>
+        <p className="text-sm text-muted-foreground">{post.description}</p>
       </div>
     </CardContent>
     <PostCardFooter post={post} />
@@ -127,10 +170,10 @@ const FameCard = ({ post }: { post: FamePost }) => (
         </div>
       </div>
       <div className="space-y-1">
-          <div className="text-sm text-muted-foreground"><Trophy className="inline-block h-4 w-4 mr-1 text-primary" /> Team</div>
+          <div className="text-sm text-muted-foreground"><Users className="inline-block h-4 w-4 mr-1 text-primary" /> Team</div>
           <p className="font-medium">{post.teamMembers.join(', ')}</p>
       </div>
-      <p>{post.description}</p>
+      <p className="text-sm text-muted-foreground">{post.description}</p>
     </CardContent>
     <PostCardFooter post={post} />
     </>
@@ -140,9 +183,10 @@ export function PostCard({ post }: { post: Post }) {
   const { incrementView } = useAppContext();
 
   useEffect(() => {
+    // A simple view incrementer. In a real app, this would be more robust.
     const timeout = setTimeout(() => {
       incrementView(post.id);
-    }, 1000); // Increment view after 1 second of visibility
+    }, 2000); // Increment view after 2 seconds to avoid accidental counts
     return () => clearTimeout(timeout);
   }, [post.id, incrementView]);
 
@@ -163,11 +207,11 @@ export function PostCard({ post }: { post: Post }) {
   };
 
   return (
-    <Card className="flex flex-col justify-between glowing-border glowing-border-hover">
-        <div>
-            <PostCardHeader post={post} />
-            {renderCardContent()}
-        </div>
+    <Card className="flex h-full flex-col justify-between glowing-border glowing-border-hover">
+      <PostCardHeader post={post} />
+      <div className="flex-grow">
+        {renderCardContent()}
+      </div>
     </Card>
   );
 }
