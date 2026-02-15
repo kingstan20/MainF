@@ -17,7 +17,7 @@ interface AppContextType {
   logout: () => void;
   register: (userData: Omit<User, 'id' | 'privacy' | 'hackathonsAttended' | 'collaborations' | 'wins'>) => Promise<void>;
   updateUser: (userId: string, updatedData: Partial<User>) => void;
-  addPost: (postData: Omit<Post, 'id' | 'authorId' | 'authorName' | 'createdAt' | 'views' | 'reactions'>) => void;
+  addPost: (postData: Omit<Post, 'id' | 'authorId' | 'authorName' | 'authorAvatarUrl' | 'createdAt' | 'views' | 'reactions'>) => void;
   incrementView: (postId: string) => void;
   addReaction: (postId: string, reactionType: keyof Post['reactions']) => void;
   startChat: (email: string, name: string) => void;
@@ -94,7 +94,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
   
-  const addPost = (postData: Omit<Post, 'id' | 'authorId' | 'authorName' | 'createdAt' | 'views' | 'reactions'>) => {
+  const addPost = (postData: Omit<Post, 'id' | 'authorId' | 'authorName' | 'authorAvatarUrl' | 'createdAt' | 'views' | 'reactions'>) => {
     if(!currentUserProfile) {
         toast({ variant: "destructive", title: "Error", description: "You must be logged in to post." });
         return;
@@ -104,6 +104,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         id: `post_${Date.now()}`,
         authorId: currentUserProfile.id,
         authorName: currentUserProfile.name,
+        authorAvatarUrl: currentUserProfile.avatarUrl,
         createdAt: new Date().toISOString(),
         views: 0,
         reactions: { chat: 0, congrats: 0, bestOfLuck: 0 },

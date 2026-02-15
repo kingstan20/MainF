@@ -12,10 +12,11 @@ import { Post, HackathonPost, TeammatePost, CollaborationPost, FamePost, PostTyp
 import { Button } from '../ui/button';
 import { Icons, PostTypeIcon } from '../Icons';
 import { Badge } from '../ui/badge';
-import { Avatar, AvatarFallback } from '../ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useAppContext } from '@/contexts/AppContext';
 import { Eye, MapPin, Users, Lightbulb, Trophy } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import Link from 'next/link';
 
 const PostCardHeader = ({ post }: { post: Post }) => {
   const timeAgo = post.createdAt ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) : 'just now';
@@ -32,17 +33,18 @@ const PostCardHeader = ({ post }: { post: Post }) => {
   return (
     <CardHeader>
       <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 border-2 border-primary/50">
+        <Link href={`/profile/${post.authorId}`} className="flex items-center gap-3 group">
+            <Avatar className="h-10 w-10 border-2 border-primary/50 group-hover:border-accent transition-colors">
+                <AvatarImage src={post.authorAvatarUrl} alt={post.authorName} />
                 <AvatarFallback className="bg-primary/20 text-primary">
                 {post.authorName.charAt(0)}
                 </AvatarFallback>
             </Avatar>
             <div>
-                <CardTitle className="text-base">{post.authorName}</CardTitle>
+                <CardTitle className="text-base group-hover:text-primary transition-colors">{post.authorName}</CardTitle>
                 <CardDescription suppressHydrationWarning>{timeAgo}</CardDescription>
             </div>
-        </div>
+        </Link>
         <div className="flex flex-shrink-0 items-center gap-2">
             <Badge variant="outline">{tag}</Badge>
             <PostTypeIcon type={post.type} className="h-5 w-5 text-primary" />

@@ -4,6 +4,7 @@ export interface User {
   email: string;
   github: string;
   password_plaintext?: string;
+  avatarUrl?: string;
   privacy: 'public' | 'private';
   hackathonsAttended: string[];
   collaborations: number;
@@ -16,6 +17,7 @@ export interface BasePost {
   id: string;
   authorId: string;
   authorName: string;
+  authorAvatarUrl?: string;
   type: PostType;
   description: string;
   createdAt: string;

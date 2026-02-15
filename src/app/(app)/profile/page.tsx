@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppContext } from "@/contexts/AppContext";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Github, Mail, Award, Users, CalendarDays, Loader2 } from "lucide-react";
@@ -23,11 +23,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import React, { useState } from "react";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   github: z.string().min(1, "GitHub username is required."),
+  avatarUrl: z.string().optional(),
 });
 
 const EditProfileDialog = () => {
@@ -40,8 +41,24 @@ const EditProfileDialog = () => {
     defaultValues: {
       name: currentUserProfile?.name || "",
       github: currentUserProfile?.github || "",
+      avatarUrl: currentUserProfile?.avatarUrl || "",
     },
   });
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        if (file.size > 1024 * 1024) { // 1MB limit
+            toast({ variant: "destructive", title: "Image too large", description: "Please upload an image smaller than 1MB." });
+            return;
+        }
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            form.setValue('avatarUrl', reader.result as string);
+        };
+        reader.readAsDataURL(file);
+    }
+  };
 
   const onSubmit = (values: z.infer<typeof profileSchema>) => {
     if (currentUserProfile) {
@@ -59,7 +76,7 @@ const EditProfileDialog = () => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
-          <DialogDescription>Update your name and GitHub username.</DialogDescription>
+          <DialogDescription>Update your name, GitHub, and profile photo.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -82,6 +99,23 @@ const EditProfileDialog = () => {
                   <FormLabel>GitHub</FormLabel>
                   <FormControl><Input {...field} /></FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="avatarUrl"
+              render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Profile Photo</FormLabel>
+                    <FormControl>
+                        <Input
+                            type="file"
+                            accept="image/png, image/jpeg, image/gif"
+                            onChange={handleAvatarChange}
+                        />
+                    </FormControl>
+                    <FormMessage />
                 </FormItem>
               )}
             />
@@ -118,6 +152,7 @@ export default function ProfilePage() {
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <Avatar className="h-24 w-24 border-4 border-primary">
+              <AvatarImage src={currentUserProfile.avatarUrl} alt={currentUserProfile.name} />
               <AvatarFallback className="text-4xl bg-primary/10 text-primary">
                 {currentUserProfile.name.charAt(0)}
               </AvatarFallback>
