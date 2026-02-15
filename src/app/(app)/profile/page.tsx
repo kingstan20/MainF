@@ -4,7 +4,7 @@ import { useAppContext } from "@/contexts/AppContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { GitHub, Mail, User, Award, Users, CalendarDays, Loader2 } from "lucide-react";
+import { Github, Mail, User, Award, Users, CalendarDays, Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { PostGrid } from "@/components/feed/PostGrid";
 import {
@@ -125,7 +125,7 @@ export default function ProfilePage() {
               <p className="text-sm text-muted-foreground">User ID: {currentUser.id}</p>
               <div className="mt-2 flex flex-wrap justify-center md:justify-start gap-x-4 gap-y-1 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1"><Mail className="h-4 w-4" /> {currentUser.email}</span>
-                <a href={`https://github.com/${currentUser.github}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary"><GitHub className="h-4 w-4" /> {currentUser.github}</a>
+                <a href={`https://github.com/${currentUser.github}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary"><Github className="h-4 w-4" /> {currentUser.github}</a>
               </div>
             </div>
             <EditProfileDialog />
