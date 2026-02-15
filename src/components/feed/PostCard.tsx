@@ -47,7 +47,7 @@ const PostCardFooter = ({ post }: { post: Post }) => {
   const { addReaction } = useAppContext();
   
   return (
-    <CardFooter className="flex-col items-start gap-4">
+    <CardFooter className="flex-col items-start gap-4 p-4 pt-0">
         <div className="flex w-full items-center justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
                 <Eye className="h-3 w-3" />
@@ -74,7 +74,7 @@ const HackathonCard = ({ post }: { post: HackathonPost }) => (
     <CardContent className="space-y-2">
         <div className="flex items-center gap-2 text-sm"><MapPin className="h-4 w-4 text-primary"/><span>{post.venue}</span></div>
         <div suppressHydrationWarning className="flex items-center gap-2 text-sm text-muted-foreground">📅 {new Date(post.date).toLocaleDateString()}</div>
-        <p className="pt-2">{post.description}</p>
+        <p>{post.description}</p>
     </CardContent>
     <PostCardFooter post={post} />
   </>
@@ -88,7 +88,7 @@ const TeammateCard = ({ post }: { post: TeammatePost }) => (
           <Badge variant="secondary">{post.currentTeam}/{post.requiredTeam} Members</Badge>
       </div>
       <div suppressHydrationWarning className="flex items-center gap-2 text-sm text-muted-foreground">📅 {new Date(post.date).toLocaleDateString()}</div>
-      <p className="pt-2">{post.description}</p>
+      <p>{post.description}</p>
     </CardContent>
     <PostCardFooter post={post} />
   </>
@@ -97,7 +97,7 @@ const TeammateCard = ({ post }: { post: TeammatePost }) => (
 const CollaborationCard = ({ post }: { post: CollaborationPost }) => (
   <>
     <CardContent className="space-y-4">
-      <div>
+      <div className="space-y-1">
         <div className="flex items-center gap-2 text-sm text-muted-foreground"><Lightbulb className="h-4 w-4 text-primary" /> Project Idea</div>
         <p className="font-semibold">{post.idea}</p>
       </div>
@@ -107,7 +107,7 @@ const CollaborationCard = ({ post }: { post: CollaborationPost }) => (
           {post.skills.map(skill => <Badge key={skill} variant="outline">{skill}</Badge>)}
         </div>
       </div>
-      <div>
+      <div className="space-y-1">
         <div className="flex items-center gap-2 text-sm text-muted-foreground"><Users className="h-4 w-4 text-primary" /> Team</div>
         <p>{post.description}</p>
       </div>
@@ -126,8 +126,8 @@ const FameCard = ({ post }: { post: FamePost }) => (
           <p suppressHydrationWarning className="text-sm text-muted-foreground">{post.venue} - {new Date(post.date).toLocaleDateString()}</p>
         </div>
       </div>
-      <div>
-          <div className="text-sm text-muted-foreground">🏆 Team</div>
+      <div className="space-y-1">
+          <div className="text-sm text-muted-foreground"><Trophy className="inline-block h-4 w-4 mr-1 text-primary" /> Team</div>
           <p className="font-medium">{post.teamMembers.join(', ')}</p>
       </div>
       <p>{post.description}</p>
