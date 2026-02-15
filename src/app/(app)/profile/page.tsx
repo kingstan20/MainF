@@ -113,7 +113,7 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-8">
+    <div className="mx-auto w-full max-w-4xl space-y-8 px-4">
       <Card className="glowing-border">
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row items-center gap-6">
