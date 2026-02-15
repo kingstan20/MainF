@@ -6,7 +6,7 @@ import { useAppContext } from '@/contexts/AppContext';
 import { CreatePostModal } from './feed/CreatePostModal';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { MessageCircle, PlusCircle } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 
 export function Navbar() {
   const { logout } = useAppContext();
@@ -14,7 +14,6 @@ export function Navbar() {
 
   const navItems = [
     { href: '/feed', label: 'Feed' },
-    { href: '/chats', label: 'Chats' },
     { href: '/profile', label: 'Profile' },
     { href: '/settings', label: 'Settings' },
   ];

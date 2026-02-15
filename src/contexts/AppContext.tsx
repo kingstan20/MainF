@@ -1,54 +1,26 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { User as FirebaseUser, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import {
-  collection,
-  doc,
-  addDoc,
-  updateDoc,
-  serverTimestamp,
-  query,
-  where,
-  getDocs,
-  Timestamp,
-  setDoc,
-} from 'firebase/firestore';
-import {
-  useFirebase,
-  useFirestore,
-  useUser,
-  useCollection,
-  addDocumentNonBlocking,
-  updateDocumentNonBlocking,
-  useMemoFirebase,
-} from '@/firebase';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 import { User, Post, PostType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { seedUsers, seedPosts } from '@/lib/seed';
 
 interface AppContextType {
-  // State
   users: User[];
   posts: Post[];
   currentUserProfile: User | null;
-  firebaseUser: FirebaseUser | null;
   isAuthenticated: boolean;
   loading: boolean;
-
-  // Auth Actions
   login: (email: string, password_plaintext: string) => Promise<void>;
   logout: () => void;
-  register: (userData: Omit<User, 'id' | 'privacy' | 'hackathonsAttended' | 'collaborations' | 'wins' | 'createdAt' | 'updatedAt'> & { password_plaintext: string }) => Promise<void>;
-  updateUser: (updatedData: Partial<User>) => void;
-
-  // Post Actions
-  addPost: (postData: Omit<Post, 'id' | 'authorId' | 'authorName' | 'createdAt' | 'updatedAt' | 'views' | 'reactions'>) => void;
+  register: (userData: Omit<User, 'id' | 'privacy' | 'hackathonsAttended' | 'collaborations' | 'wins'>) => Promise<void>;
+  updateUser: (userId: string, updatedData: Partial<User>) => void;
+  addPost: (postData: Omit<Post, 'id' | 'authorId' | 'authorName' | 'createdAt' | 'views' | 'reactions'>) => void;
   incrementView: (postId: string) => void;
   addReaction: (postId: string, reactionType: keyof Post['reactions']) => void;
-  startChat: (postAuthorId: string) => Promise<string | null>;
-
-  // Getters
+  startChat: (email: string, name: string) => void;
   getUserById: (userId: string) => User | undefined;
 }
 
@@ -57,170 +29,122 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { toast } = useToast();
-  const { auth } = useFirebase();
-  const firestore = useFirestore();
 
-  const { user: firebaseUser, isUserLoading: isAuthLoading } = useUser();
+  const [users, setUsers] = useLocalStorage<User[]>('hackmate_users', seedUsers);
+  const [posts, setPosts] = useLocalStorage<Post[]>('hackmate_posts', seedPosts);
+  const [currentUserProfile, setCurrentUserProfile] = useLocalStorage<User | null>('hackmate_currentUser', null);
+  const [loading, setLoading] = useState(true);
 
-  const postsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'posts') : null, [firestore]);
-  const { data: postsData, isLoading: isPostsLoading } = useCollection<Post>(
-    postsQuery
-  );
-  
-  const usersQuery = useMemoFirebase(() => firestore ? collection(firestore, 'users') : null, [firestore]);
-  const { data: usersData, isLoading: isUsersLoading } = useCollection<User>(
-    usersQuery
-  );
-
-  const currentUserProfile = useMemo(() => {
-    if (!firebaseUser || !usersData) return null;
-    return usersData.find(u => u.id === firebaseUser.uid) || null;
-  }, [firebaseUser, usersData]);
-
-  const loading = isAuthLoading || isPostsLoading || isUsersLoading;
+  useEffect(() => {
+    // Simulate loading for better UX
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const login = async (email: string, password_plaintext: string) => {
-    if (!auth) return;
-    try {
-      await signInWithEmailAndPassword(auth, email, password_plaintext);
+    const user = users.find(u => u.email === email && u.password_plaintext === password_plaintext);
+    if (user) {
+      setCurrentUserProfile(user);
       toast({ title: "Login Successful", description: "Redirecting to your feed..." });
       router.push('/feed');
-    } catch (error: any) {
+    } else {
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: error.message,
+        description: "Invalid email or password.",
       });
     }
   };
 
-  const logout = async () => {
-    if (!auth) return;
-    await auth.signOut();
+  const logout = () => {
+    setCurrentUserProfile(null);
     router.push('/');
   };
 
-  const register = async (userData: Omit<User, 'id' | 'privacy' | 'hackathonsAttended' | 'collaborations' | 'wins' | 'createdAt' | 'updatedAt'> & { password_plaintext: string }) => {
-    if (!auth || !firestore) return;
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password_plaintext);
-      const user = userCredential.user;
-      if (user) {
-        const newUserProfile: Omit<User, 'id'> = {
-          name: userData.name,
-          email: userData.email,
-          github: userData.github,
-          privacy: 'public',
-          hackathonsAttended: [],
-          collaborations: 0,
-          wins: 0,
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
-        };
-        await setDoc(doc(firestore, "users", user.uid), newUserProfile);
-        toast({ title: "Registration Successful", description: "Welcome to HackMate!" });
-        router.push('/feed');
-      }
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Registration Failed", description: error.message });
+  const register = async (userData: Omit<User, 'id' | 'privacy' | 'hackathonsAttended' | 'collaborations' | 'wins'>) => {
+    const existingUser = users.find(u => u.email === userData.email);
+    if (existingUser) {
+      toast({ variant: "destructive", title: "Registration Failed", description: "An account with this email already exists." });
+      return;
     }
-  };
 
-  const updateUser = (updatedData: Partial<User>) => {
-    if (!currentUserProfile || !firestore) return;
-    const userRef = doc(firestore, 'users', currentUserProfile.id);
-    updateDocumentNonBlocking(userRef, { ...updatedData, updatedAt: serverTimestamp() });
+    const newUser: User = {
+      ...userData,
+      id: `user_${Date.now()}`,
+      privacy: 'public',
+      hackathonsAttended: [],
+      collaborations: 0,
+      wins: 0,
+    };
+    
+    setUsers(prevUsers => [...prevUsers, newUser]);
+    setCurrentUserProfile(newUser);
+    toast({ title: "Registration Successful", description: "Welcome to HackMate!" });
+    router.push('/feed');
   };
   
-  const addPost = (postData: Omit<Post, 'id' | 'authorId' | 'authorName' | 'createdAt' | 'updatedAt' | 'views' | 'reactions'>) => {
-    if(!currentUserProfile || !firestore) {
+  const updateUser = (userId: string, updatedData: Partial<User>) => {
+    setUsers(prevUsers =>
+      prevUsers.map(user =>
+        user.id === userId ? { ...user, ...updatedData } : user
+      )
+    );
+    if(currentUserProfile?.id === userId){
+      setCurrentUserProfile(prev => prev ? {...prev, ...updatedData} : null)
+    }
+  };
+  
+  const addPost = (postData: Omit<Post, 'id' | 'authorId' | 'authorName' | 'createdAt' | 'views' | 'reactions'>) => {
+    if(!currentUserProfile) {
         toast({ variant: "destructive", title: "Error", description: "You must be logged in to post." });
         return;
     }
-    const postsCollection = collection(firestore, 'posts');
-    const newPost = {
+    const newPost: Post = {
         ...postData,
+        id: `post_${Date.now()}`,
         authorId: currentUserProfile.id,
         authorName: currentUserProfile.name,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        createdAt: new Date().toISOString(),
         views: 0,
         reactions: { chat: 0, congrats: 0, bestOfLuck: 0 },
-    };
-    addDocumentNonBlocking(postsCollection, newPost);
+    } as Post;
+    
+    setPosts(prevPosts => [newPost, ...prevPosts]);
   };
 
   const incrementView = useCallback((postId: string) => {
-    if (!firestore) return;
-    // This is more complex with Firestore to avoid spamming updates.
-    // For now, we'll keep it simple and update. A better solution would use server-side logic.
-    const postRef = doc(firestore, 'posts', postId);
-    // A more complex implementation is needed here to avoid race conditions and spamming.
-    // We will skip a direct implementation here to keep it simple for now.
-  }, [firestore]);
+    setPosts(prevPosts =>
+      prevPosts.map(p => p.id === postId ? { ...p, views: p.views + 1 } : p)
+    );
+  }, [setPosts]);
   
   const addReaction = (postId: string, reactionType: keyof Post['reactions']) => {
-    if (!postsData || !firestore) return;
-    const post = postsData.find(p => p.id === postId);
-    if (!post) return;
-    const postRef = doc(firestore, 'posts', postId);
-    const newReactionCount = (post.reactions[reactionType] || 0) + 1;
-    updateDocumentNonBlocking(postRef, {
-      [`reactions.${reactionType}`]: newReactionCount
-    });
+    setPosts(prevPosts =>
+      prevPosts.map(p =>
+        p.id === postId
+          ? {
+              ...p,
+              reactions: {
+                ...p.reactions,
+                [reactionType]: (p.reactions[reactionType] || 0) + 1,
+              },
+            }
+          : p
+      )
+    );
   };
 
-  const startChat = async (postAuthorId: string): Promise<string | null> => {
-    if (!firebaseUser || !firestore) {
-      toast({ variant: "destructive", title: "Not Authenticated", description: "You must be logged in to start a chat." });
-      return null;
-    }
-    if (firebaseUser.uid === postAuthorId) {
-        toast({ title: "Let's not talk to ourselves", description: "You can't start a chat about your own post." });
-        return null;
-    }
-
-    const chatsRef = collection(firestore, 'chats');
-    const q = query(chatsRef, where(`members.${firebaseUser.uid}`, '==', true), where(`members.${postAuthorId}`, '==', true));
-    
-    try {
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        // Chat already exists
-        const chatId = querySnapshot.docs[0].id;
-        router.push(`/chats/${chatId}`);
-        return chatId;
-      } else {
-        // Create new chat
-        const newChat = {
-          members: {
-            [firebaseUser.uid]: true,
-            [postAuthorId]: true,
-          },
-          participantIds: [firebaseUser.uid, postAuthorId],
-          lastMessage: '',
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        };
-        const docRef = await addDoc(chatsRef, newChat);
-        router.push(`/chats/${docRef.id}`);
-        return docRef.id;
-      }
-    } catch (error) {
-      console.error("Error starting chat:", error);
-      toast({ variant: "destructive", title: "Chat Error", description: "Could not start a new chat." });
-      return null;
-    }
+  const startChat = (email: string, name: string) => {
+    window.location.href = `mailto:${email}?subject=HackMate Chat with ${name}`;
   };
 
-  const getUserById = (userId: string) => usersData?.find(u => u.id === userId);
+  const getUserById = (userId: string) => users.find(u => u.id === userId);
 
   const value = {
-    users: usersData || [],
-    posts: postsData || [],
+    users,
+    posts,
     currentUserProfile,
-    firebaseUser,
-    isAuthenticated: !!firebaseUser,
+    isAuthenticated: !!currentUserProfile,
     loading,
     login,
     logout,

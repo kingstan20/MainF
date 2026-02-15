@@ -1,16 +1,13 @@
-import { Timestamp } from 'firebase/firestore';
-
 export interface User {
   id: string;
   name: string;
   email: string;
   github: string;
+  password_plaintext?: string;
   privacy: 'public' | 'private';
   hackathonsAttended: string[];
   collaborations: number;
   wins: number;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
 }
 
 export type PostType = 'HACKATHON' | 'TEAMMATE' | 'COLLABORATION' | 'FAME';
@@ -21,8 +18,7 @@ export interface BasePost {
   authorName: string;
   type: PostType;
   description: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: string;
   views: number;
   reactions: {
     chat: number;
@@ -66,8 +62,8 @@ export interface Chat {
     id: string;
     participantIds: string[];
     members: { [key: string]: boolean };
-    createdAt: Timestamp;
-    updatedAt: Timestamp;
+    createdAt: string;
+    updatedAt: string;
     lastMessage?: string;
 }
 
@@ -76,6 +72,6 @@ export interface Message {
     chatId: string;
     senderId: string;
     content: string;
-    createdAt: Timestamp;
+    createdAt: string;
     senderName: string;
 }

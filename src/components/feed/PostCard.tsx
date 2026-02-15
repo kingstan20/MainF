@@ -15,12 +15,10 @@ import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { useAppContext } from '@/contexts/AppContext';
 import { Eye, MapPin, Users, Lightbulb, Trophy } from 'lucide-react';
-import { Timestamp } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
-import { useEffect, useState } from 'react';
 
 const PostCardHeader = ({ post }: { post: Post }) => {
-  const timeAgo = post.createdAt ? formatDistanceToNow(new Date((post.createdAt as Timestamp).toDate()), { addSuffix: true }) : 'just now';
+  const timeAgo = post.createdAt ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) : 'just now';
   
   return (
     <CardHeader>
@@ -43,13 +41,13 @@ const PostCardHeader = ({ post }: { post: Post }) => {
 };
 
 const PostCardFooter = ({ post }: { post: Post }) => {
-  const { addReaction, startChat } = useAppContext();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { addReaction, startChat, getUserById } = useAppContext();
 
-  const handleChatClick = async () => {
-    setIsSubmitting(true);
-    await startChat(post.authorId);
-    setIsSubmitting(false);
+  const handleChatClick = () => {
+    const author = getUserById(post.authorId);
+    if(author) {
+        startChat(author.email, author.name);
+    }
   };
   
   return (
@@ -61,7 +59,7 @@ const PostCardFooter = ({ post }: { post: Post }) => {
             </div>
         </div>
         <div className="flex w-full flex-wrap items-center justify-start gap-2">
-            <Button variant="outline" size="sm" onClick={handleChatClick} disabled={isSubmitting}>
+            <Button variant="outline" size="sm" onClick={handleChatClick}>
                 <Icons.chat className="mr-2 h-4 w-4" /> Chat ({post.reactions.chat || 0})
             </Button>
             <Button variant="outline" size="sm" onClick={() => addReaction(post.id, 'congrats')}>
@@ -145,13 +143,13 @@ const FameCard = ({ post }: { post: FamePost }) => (
 export function PostCard({ post }: { post: Post }) {
   const { incrementView } = useAppContext();
 
-  useEffect(() => {
-    // A simple view incrementer. In a real app, this would be more robust.
-    const timeout = setTimeout(() => {
-      incrementView(post.id);
-    }, 5000); // Increment view after 5 seconds to avoid accidental counts
-    return () => clearTimeout(timeout);
-  }, [post.id, incrementView]);
+  // A simple view incrementer. In a real app, this would be more robust.
+  // useEffect(() => {
+  //   const timeout = setTimeout(() => {
+  //     incrementView(post.id);
+  //   }, 5000); // Increment view after 5 seconds to avoid accidental counts
+  //   return () => clearTimeout(timeout);
+  // }, [post.id, incrementView]);
 
 
   const renderCardContent = () => {

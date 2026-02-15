@@ -1,22 +1,22 @@
 "use client";
 
 import React, { useEffect } from 'react';
-import { useUser } from '@/firebase';
+import { useAppContext } from '@/contexts/AppContext';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, isUserLoading } = useUser();
+  const { isAuthenticated, loading } = useAppContext();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isUserLoading && !user) {
+    if (!loading && !isAuthenticated) {
       router.replace('/');
     }
-  }, [user, isUserLoading, router]);
+  }, [isAuthenticated, loading, router]);
 
-  if (isUserLoading || !user) {
+  if (loading || !isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />

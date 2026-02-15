@@ -16,8 +16,10 @@ export default function SettingsPage() {
   const { toast } = useToast();
 
   const handlePrivacyToggle = (isPrivate: boolean) => {
-    updateUser({ privacy: isPrivate ? 'private' : 'public' });
-    toast({ title: "Privacy Updated", description: `Your profile is now ${isPrivate ? 'private' : 'public'}.` });
+    if (currentUserProfile) {
+      updateUser(currentUserProfile.id, { privacy: isPrivate ? 'private' : 'public' });
+      toast({ title: "Privacy Updated", description: `Your profile is now ${isPrivate ? 'private' : 'public'}.` });
+    }
   };
 
   if (!currentUserProfile) {
@@ -34,7 +36,7 @@ export default function SettingsPage() {
       <Card className="glowing-border">
         <CardHeader>
           <CardTitle>Change Password</CardTitle>
-          <CardDescription>Password management is not yet available with Firebase.</CardDescription>
+          <CardDescription>Password management is not implemented in this demo.</CardDescription>
         </CardHeader>
         <CardContent>
             <Button disabled>Update Password</Button>
