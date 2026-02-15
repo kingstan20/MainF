@@ -1,0 +1,356 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user profile within the HackMate application, storing personal details, settings, and references to their activities.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's full name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address, used for contact.",
+          "format": "email"
+        },
+        "gitHub": {
+          "type": "string",
+          "description": "The user's GitHub profile URL or username. (Relationship: User 1:1 GitHub Profile)"
+        },
+        "privacySetting": {
+          "type": "string",
+          "description": "Determines the visibility of the user's profile information (e.g., 'public', 'private')."
+        },
+        "themeSetting": {
+          "type": "string",
+          "description": "The user's preferred application theme (e.g., 'neonGreen', 'dark')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the user account was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when the user profile was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "gitHub",
+        "privacySetting",
+        "createdAt"
+      ]
+    },
+    "Post": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Post",
+      "type": "object",
+      "description": "Represents a user-generated content post, categorized into different types such as hackathon announcements, team-building requests, project collaborations, or achievement showcases.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Post entity."
+        },
+        "authorId": {
+          "type": "string",
+          "description": "Reference to the User who created the post. (Relationship: User 1:N Post)"
+        },
+        "type": {
+          "type": "string",
+          "description": "The category of the post, determining its specific content fields.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the post's content."
+        },
+        "venue": {
+          "type": "string",
+          "description": "The physical or virtual location of the hackathon or event. Applicable for 'Upcoming Hackathon', 'Want Teammate', and 'Hall of Fame' post types."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date and time of the hackathon or event. Applicable for 'Upcoming Hackathon', 'Want Teammate', and 'Hall of Fame' post types.",
+          "format": "date-time"
+        },
+        "projectIdeaField": {
+          "type": "string",
+          "description": "The project idea or field of interest for collaboration. Applicable for 'Project Collaboration' post type."
+        },
+        "skillsRequired": {
+          "type": "array",
+          "description": "A list of skills needed for the project collaboration. Applicable for 'Project Collaboration' post type.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "currentTeamMemberIds": {
+          "type": "array",
+          "description": "References to Users currently part of the team for a hackathon or project. (Relationship: User N:N Post, specific to team members). Applicable for 'Want Teammate' and 'Project Collaboration' post types.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "totalTeamMembersRequired": {
+          "type": "number",
+          "description": "The total number of team members sought for a hackathon. Applicable for 'Want Teammate' post type."
+        },
+        "achievement": {
+          "type": "string",
+          "description": "The achievement made, such as '1st Place', '2nd Place', '3rd Place', or a 'Funny Loss'. Applicable for 'Hall of Fame' post type."
+        },
+        "teamMemberIds": {
+          "type": "array",
+          "description": "References to Users who were part of the winning or participating team for a Hall of Fame entry. (Relationship: User N:N Post, specific to Hall of Fame). Applicable for 'Hall of Fame' post type.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "viewCount": {
+          "type": "number",
+          "description": "The number of times the post has been viewed."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the post was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when the post was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "authorId",
+        "type",
+        "description",
+        "viewCount",
+        "createdAt"
+      ]
+    },
+    "Reaction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Reaction",
+      "type": "object",
+      "description": "Represents a user's specific interaction or emotional response to a post.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Reaction entity."
+        },
+        "postId": {
+          "type": "string",
+          "description": "Reference to the Post to which the reaction is directed. (Relationship: Post 1:N Reaction)"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who performed the reaction. (Relationship: User 1:N Reaction)"
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of reaction, indicating user intent or sentiment towards the post. 'interestInChat' can indicate a desire to discuss the post further.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the reaction was recorded.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "postId",
+        "userId",
+        "type",
+        "createdAt"
+      ]
+    },
+    "Chat": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Chat",
+      "type": "object",
+      "description": "Represents a private conversation or group chat between users, potentially linked to a specific post for context.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Chat entity."
+        },
+        "participantIds": {
+          "type": "array",
+          "description": "References to Users involved in this chat. (Relationship: User N:N Chat)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "relatedPostId": {
+          "type": "string",
+          "description": "Optional reference to a Post that this chat is discussing. (Relationship: Post 1:N Chat)"
+        },
+        "title": {
+          "type": "string",
+          "description": "An optional title for the chat, especially useful for group chats or topic-specific discussions."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the chat was initiated.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when the chat was last updated (e.g., a new message was sent).",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "participantIds",
+        "createdAt"
+      ]
+    },
+    "Message": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Message",
+      "type": "object",
+      "description": "Represents a single message sent within a chat conversation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Message entity."
+        },
+        "chatId": {
+          "type": "string",
+          "description": "Reference to the Chat conversation this message belongs to. (Relationship: Chat 1:N Message)"
+        },
+        "senderId": {
+          "type": "string",
+          "description": "Reference to the User who sent this message. (Relationship: User 1:N Message)"
+        },
+        "content": {
+          "type": "string",
+          "description": "The actual text content of the message."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the message was sent.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "chatId",
+        "senderId",
+        "content",
+        "createdAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores individual user profiles. The `userId` path parameter maps directly to `request.auth.uid` for private data ownership. Portions of the profile may be publicly readable based on `privacySetting`."
+        }
+      },
+      {
+        "path": "/posts/{postId}",
+        "definition": {
+          "entityName": "Post",
+          "schema": {
+            "$ref": "#/backend/entities/Post"
+          },
+          "description": "A top-level collection for all public user-generated content posts. Each document includes `authorId` for write authorization. All posts are publicly readable, facilitating QAP-compliant list operations for the main feed.",
+          "params": [
+            {
+              "name": "postId",
+              "description": "The unique identifier for a specific Post."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/posts/{postId}/reactions/{reactionId}",
+        "definition": {
+          "entityName": "Reaction",
+          "schema": {
+            "$ref": "#/backend/entities/Reaction"
+          },
+          "description": "Reactions to posts, stored as a subcollection. Each reaction document includes `userId` for write/delete authorization by the reactor. Reactions are publicly readable, similar to their parent posts.",
+          "params": [
+            {
+              "name": "postId",
+              "description": "The unique identifier of the parent Post."
+            },
+            {
+              "name": "reactionId",
+              "description": "The unique identifier for a specific Reaction."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/chats/{chatId}",
+        "definition": {
+          "entityName": "Chat",
+          "schema": {
+            "$ref": "#/backend/entities/Chat"
+          },
+          "description": "Represents private conversations. Documents include a denormalized `members` map (e.g., `{ 'uid1': true, 'uid2': true }`) from the schema's `participantIds` for authorization independence. This map is used to enforce read/write access and support QAP-compliant list queries (e.g., `where('members.' + request.auth.uid, '==', true)`).",
+          "params": [
+            {
+              "name": "chatId",
+              "description": "The unique identifier for a specific Chat conversation."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/chats/{chatId}/messages/{messageId}",
+        "definition": {
+          "entityName": "Message",
+          "schema": {
+            "$ref": "#/backend/entities/Message"
+          },
+          "description": "Individual messages within a chat. Each message document includes a denormalized `members` map from its parent `Chat` for authorization independence. This ensures rules can verify `request.auth.uid in resource.data.members` without requiring `get()` calls to the parent chat document, supporting QAP-compliant list queries.",
+          "params": [
+            {
+              "name": "chatId",
+              "description": "The unique identifier of the parent Chat conversation."
+            },
+            {
+              "name": "messageId",
+              "description": "The unique identifier for a specific Message."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed following the core principles of Authorization Independence, Structural Segregation, and Access Modeling to ensure security, scalability, and debuggability. \n\n**Authorization Independence (CRITICAL):**\n\n1.  **User Profiles (`/users/{userId}`):** Access is primarily self-governed. The `userId` in the path directly corresponds to `request.auth.uid`, making authorization checks straightforward without external dependencies. Public profile fields can be read by anyone, while private fields are restricted to the owner.\n2.  **Posts (`/posts/{postId}`):** The `authorId` is explicitly stored within each `Post` document. This allows security rules to verify write access (`request.auth.uid == resource.data.authorId`) without requiring a `get()` call to a separate user document or parent collection. Read access to posts is public.\n3.  **Reactions (`/posts/{postId}/reactions/{reactionId}`):** Similar to posts, each `Reaction` document contains `userId` of the reactor, enabling direct authorization for modification or deletion of one's own reaction. Since posts are public, reactions are also publicly readable, thus no authorization dependency on the parent `Post` document for read access. For write access, the `userId` field is sufficient.\n4.  **Chats (`/chats/{chatId}`):** To achieve authorization independence for collaborative data, the `participantIds` array from the schema is denormalized into a `members` map (e.g., `members: { 'uid1': true, 'uid2': true }`) directly within each `Chat` document. Security rules can then simply check `request.auth.uid in resource.data.members` for read/write access to the chat, eliminating any `get()` calls.\n5.  **Messages (`/chats/{chatId}/messages/{messageId}`):** This is the most critical application of denormalization for authorization independence. To prevent `get('/chats/$(chatId)')` calls in security rules for messages, each `Message` document explicitly includes the denormalized `members` map from its parent `Chat` document. This allows rules to verify `request.auth.uid in resource.data.members` for all read and write operations on messages, ensuring atomic and independent authorization.\n\n**QAPs (Rules are not Filters):**\n\n1.  **Structural Segregation:** All posts are in a single top-level `/posts` collection, implicitly having a 'public read' security posture. This allows for efficient `list` operations (e.g., for the main feed) without security rules needing to filter results. Similarly, reactions are public.\n2.  **Membership Model for Chats:** The `members` map in `Chat` documents enables QAP-compliant `list` operations. Users can query the `/chats` collection with a `where('members.' + request.auth.uid, '==', true)` clause. This query is performant and the security rule (`allow list: if request.auth.uid in resource.data.members;`) directly enforces access based on document data, not filtering a broader unauthorized set. The same applies to messages within a chat, where a user can `list` messages in a specific chat if they are a member, enforced by the denormalized `members` map in each message document.\n\nThis architecture minimizes rule complexity, enhances security by preventing dangerous `get()` calls, and supports efficient querying for all user-facing features, including the crucial chat functionality where users can contact others based on posts."
+  }
+}
