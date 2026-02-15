@@ -34,7 +34,7 @@ const PostCardHeader = ({ post }: { post: Post }) => {
             </Avatar>
             <div>
                 <CardTitle className="text-base">{post.authorName}</CardTitle>
-                <CardDescription>{timeAgo}</CardDescription>
+                <CardDescription suppressHydrationWarning>{timeAgo}</CardDescription>
             </div>
         </div>
         <PostTypeIcon type={post.type} className="h-6 w-6 text-primary" />
@@ -73,7 +73,7 @@ const HackathonCard = ({ post }: { post: HackathonPost }) => (
   <>
     <CardContent className="space-y-2">
         <div className="flex items-center gap-2 text-sm"><MapPin className="h-4 w-4 text-primary"/><span>{post.venue}</span></div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">📅 {new Date(post.date).toLocaleDateString()}</div>
+        <div suppressHydrationWarning className="flex items-center gap-2 text-sm text-muted-foreground">📅 {new Date(post.date).toLocaleDateString()}</div>
         <p className="pt-2">{post.description}</p>
     </CardContent>
     <PostCardFooter post={post} />
@@ -87,7 +87,7 @@ const TeammateCard = ({ post }: { post: TeammatePost }) => (
           <div className="flex items-center gap-2 text-sm"><MapPin className="h-4 w-4 text-primary"/><span>{post.venue}</span></div>
           <Badge variant="secondary">{post.currentTeam}/{post.requiredTeam} Members</Badge>
       </div>
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">📅 {new Date(post.date).toLocaleDateString()}</div>
+      <div suppressHydrationWarning className="flex items-center gap-2 text-sm text-muted-foreground">📅 {new Date(post.date).toLocaleDateString()}</div>
       <p className="pt-2">{post.description}</p>
     </CardContent>
     <PostCardFooter post={post} />
@@ -123,7 +123,7 @@ const FameCard = ({ post }: { post: FamePost }) => (
         <Trophy className="h-8 w-8 text-primary" />
         <div>
           <p className="font-bold text-lg text-primary">{post.achievement}</p>
-          <p className="text-sm text-muted-foreground">{post.venue} - {new Date(post.date).toLocaleDateString()}</p>
+          <p suppressHydrationWarning className="text-sm text-muted-foreground">{post.venue} - {new Date(post.date).toLocaleDateString()}</p>
         </div>
       </div>
       <div>
