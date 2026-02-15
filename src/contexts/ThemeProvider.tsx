@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 
 type Theme = 'light' | 'dark';
 
@@ -20,20 +21,13 @@ export function ThemeProvider({
   defaultTheme?: Theme;
   storageKey?: string;
 }) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window === 'undefined') {
-      return defaultTheme;
-    }
-    const savedTheme = localStorage.getItem(storageKey) as Theme | null;
-    return savedTheme || defaultTheme;
-  });
+  const [theme, setTheme] = useLocalStorage<Theme>(storageKey, defaultTheme);
 
   useEffect(() => {
     const root = document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
-    localStorage.setItem(storageKey, theme);
-  }, [theme, storageKey]);
+  }, [theme]);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
