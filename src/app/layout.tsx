@@ -3,6 +3,7 @@ import { AppProvider } from '@/contexts/AppContext';
 import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
+import { ThemeProvider } from '@/contexts/ThemeProvider';
 
 export const metadata: Metadata = {
   title: 'HackMate',
@@ -23,9 +24,11 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
-          <AppProvider>
-            {children}
-          </AppProvider>
+          <ThemeProvider>
+            <AppProvider>
+              {children}
+            </AppProvider>
+          </ThemeProvider>
         </FirebaseClientProvider>
         <Toaster />
       </body>

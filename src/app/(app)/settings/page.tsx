@@ -5,12 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { useAppContext } from "@/contexts/AppContext";
+import { useTheme } from "@/contexts/ThemeProvider";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 
 export default function SettingsPage() {
-  const { currentUserProfile, updateUser, theme, toggleTheme } = useAppContext();
+  const { currentUserProfile, updateUser } = useAppContext();
+  const { theme, toggleTheme } = useTheme();
   const { toast } = useToast();
 
   const handlePrivacyToggle = (isPrivate: boolean) => {

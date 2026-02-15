@@ -13,23 +13,20 @@ import {
   where,
   getDocs,
   Timestamp,
+  setDoc,
 } from 'firebase/firestore';
 import {
   useFirebase,
   useFirestore,
   useUser,
   useCollection,
-  initiateEmailSignUp,
   initiateEmailSignIn,
   addDocumentNonBlocking,
   updateDocumentNonBlocking,
-  setDocumentNonBlocking,
   useMemoFirebase,
 } from '@/firebase';
 import { User, Post, PostType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-
-type Theme = 'light' | 'dark';
 
 interface AppContextType {
   // State
@@ -39,7 +36,6 @@ interface AppContextType {
   firebaseUser: FirebaseUser | null;
   isAuthenticated: boolean;
   loading: boolean;
-  theme: Theme;
 
   // Auth Actions
   login: (email: string, password_plaintext: string) => void;
@@ -55,9 +51,6 @@ interface AppContextType {
 
   // Getters
   getUserById: (userId: string) => User | undefined;
-
-  // Theme
-  toggleTheme: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -80,8 +73,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     usersQuery
   );
 
-  const [theme, setTheme] = useState<Theme>('dark');
-  
   const currentUserProfile = useMemo(() => {
     if (!firebaseUser || !usersData) return null;
     return usersData.find(u => u.id === firebaseUser.uid) || null;
@@ -89,20 +80,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const loading = isAuthLoading || isPostsLoading || isUsersLoading;
 
-  useEffect(() => {
-    // Apply theme from localStorage or default
-    const savedTheme = localStorage.getItem('hackmate-theme') as Theme | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(theme);
-    localStorage.setItem('hackmate-theme', theme);
-  }, [theme]);
-  
   const login = (email: string, password_plaintext: string) => {
     initiateEmailSignIn(auth, email, password_plaintext);
     toast({ title: "Login Initiated", description: "Redirecting to your feed..." });
@@ -130,7 +107,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
         };
-        setDocumentNonBlocking(doc(firestore, "users", user.uid), newUserProfile, { merge: true });
+        await setDoc(doc(firestore, "users", user.uid), newUserProfile);
         toast({ title: "Registration Successful", description: "Welcome to HackMate!" });
         router.push('/feed');
       }
@@ -209,7 +186,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             [firebaseUser.uid]: true,
             [postAuthorId]: true,
           },
-          participantIds: [firebaseUser.uid, postAuthorId], // Keep for easy access if needed
+          participantIds: [firebaseUser.uid, postAuthorId],
+          lastMessage: '',
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         };
@@ -224,12 +202,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-
   const getUserById = (userId: string) => usersData?.find(u => u.id === userId);
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  };
 
   const value = {
     users: usersData || [],
@@ -238,7 +211,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     firebaseUser,
     isAuthenticated: !!firebaseUser,
     loading,
-    theme,
     login,
     logout,
     register,
@@ -247,7 +219,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     incrementView,
     addReaction,
     getUserById,
-    toggleTheme,
     startChat
   };
 
