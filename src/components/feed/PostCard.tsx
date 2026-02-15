@@ -54,7 +54,7 @@ const PostCardFooter = ({ post }: { post: Post }) => {
                 <span>{post.views} views</span>
             </div>
         </div>
-        <div className="flex w-full gap-2">
+        <div className="flex flex-col sm:flex-row w-full gap-2">
             <Button variant="outline" size="sm" className="flex-1" onClick={() => addReaction(post.id, 'chat')}>
                 <Icons.chat className="mr-2 h-4 w-4" /> Chat ({post.reactions.chat})
             </Button>

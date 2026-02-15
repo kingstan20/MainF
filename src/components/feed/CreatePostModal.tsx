@@ -143,7 +143,7 @@ export function CreatePostModal({ children }: { children: React.ReactNode }) {
           </DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="hackathon" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
             <TabsTrigger value="hackathon">Hackathon</TabsTrigger>
             <TabsTrigger value="teammate">Team Up</TabsTrigger>
             <TabsTrigger value="collaboration">Project</TabsTrigger>
