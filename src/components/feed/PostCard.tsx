@@ -54,14 +54,14 @@ const PostCardFooter = ({ post }: { post: Post }) => {
                 <span>{post.views} views</span>
             </div>
         </div>
-        <div className="flex flex-col sm:flex-row w-full gap-2">
-            <Button variant="outline" size="sm" className="flex-1" onClick={() => addReaction(post.id, 'chat')}>
+        <div className="flex w-full flex-wrap items-center justify-start gap-2">
+            <Button variant="outline" size="sm" onClick={() => addReaction(post.id, 'chat')}>
                 <Icons.chat className="mr-2 h-4 w-4" /> Chat ({post.reactions.chat})
             </Button>
-            <Button variant="outline" size="sm" className="flex-1" onClick={() => addReaction(post.id, 'congrats')}>
+            <Button variant="outline" size="sm" onClick={() => addReaction(post.id, 'congrats')}>
                 <Icons.congrats className="mr-2 h-4 w-4" /> Congrats ({post.reactions.congrats})
             </Button>
-            <Button variant="outline" size="sm" className="flex-1" onClick={() => addReaction(post.id, 'bestOfLuck')}>
+            <Button variant="outline" size="sm" onClick={() => addReaction(post.id, 'bestOfLuck')}>
                 <Icons.bestOfLuck className="mr-2 h-4 w-4" /> Luck ({post.reactions.bestOfLuck})
             </Button>
       </div>
