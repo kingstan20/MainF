@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useAppContext } from "@/contexts/AppContext";
 import { HackathonPost } from "@/lib/types";
 import { format, isSameDay } from "date-fns";
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 export default function CalendarPage() {
   const { currentUserProfile, posts } = useAppContext();
@@ -22,13 +24,13 @@ export default function CalendarPage() {
     : [];
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-8 px-4">
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-4">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tighter">My Calendar</h1>
         <p className="text-muted-foreground">Upcoming hackathons you've saved.</p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-        <div className="md:col-span-1">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div className="lg:col-span-1">
           <Card className="glowing-border p-0 flex justify-center">
               <Calendar
                 mode="single"
@@ -42,28 +44,30 @@ export default function CalendarPage() {
               />
           </Card>
         </div>
-        <div className="md:col-span-1 space-y-4">
+        <div className="lg:col-span-1 space-y-4">
           <h2 className="text-xl font-semibold">
             Events for {selectedDate ? format(selectedDate, "PPP") : "..."}
           </h2>
           {eventsForSelectedDate.length > 0 ? (
-            <div className="space-y-4">
-              {eventsForSelectedDate.map(post => (
-                <Card key={post.id} className="glowing-border-hover">
-                  <CardHeader>
-                    <CardTitle>{post.venue}</CardTitle>
-                    <CardDescription suppressHydrationWarning>
-                      {new Date(post.date).toLocaleDateString()}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">{post.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <ScrollArea className={cn("h-[400px] w-full rounded-md", eventsForSelectedDate.length > 2 && "glowing-border p-4")}>
+              <div className="space-y-4">
+                {eventsForSelectedDate.map(post => (
+                  <Card key={post.id} className="glowing-border-hover bg-card/50">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-lg font-semibold">{post.venue}</CardTitle>
+                      <CardDescription suppressHydrationWarning>
+                        {new Date(post.date).toLocaleDateString()}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{post.description}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </ScrollArea>
           ) : (
-            <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-primary/20 bg-card p-12 text-center">
+            <div className="flex h-full min-h-[400px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-primary/20 bg-card p-8 text-center">
                 <h2 className="text-xl font-medium">No Saved Events</h2>
                 <p className="text-muted-foreground">You have no saved hackathons for this day.</p>
             </div>
