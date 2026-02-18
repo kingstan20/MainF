@@ -14,7 +14,7 @@ import { Icons, PostTypeIcon } from '../Icons';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useAppContext } from '@/contexts/AppContext';
-import { Eye, MapPin, Users, Lightbulb, Trophy } from 'lucide-react';
+import { Eye, MapPin, Users, Lightbulb, Trophy, Bookmark } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 
@@ -55,7 +55,7 @@ const PostCardHeader = ({ post }: { post: Post }) => {
 };
 
 const PostCardFooter = ({ post }: { post: Post }) => {
-  const { addReaction, startChat, getUserById } = useAppContext();
+  const { addReaction, startChat, getUserById, toggleLikePost, isPostLiked, currentUserProfile } = useAppContext();
 
   const handleChatClick = () => {
     const author = getUserById(post.authorId);
@@ -63,6 +63,8 @@ const PostCardFooter = ({ post }: { post: Post }) => {
         startChat(author.email, author.name);
     }
   };
+  
+  const isAuthor = post.authorId === currentUserProfile?.id;
   
   return (
     <CardFooter className="flex-col items-start gap-4 p-4 pt-0">
@@ -73,15 +75,23 @@ const PostCardFooter = ({ post }: { post: Post }) => {
             </div>
         </div>
         <div className="flex w-full flex-wrap items-center justify-start gap-2">
-            <Button variant="outline" size="sm" onClick={handleChatClick}>
-                <Icons.chat className="mr-2 h-4 w-4" /> Chat ({post.reactions.chat || 0})
-            </Button>
+            {!isAuthor && (
+              <Button variant="outline" size="sm" onClick={handleChatClick}>
+                  <Icons.chat className="mr-2 h-4 w-4" /> Chat ({post.reactions.chat || 0})
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={() => addReaction(post.id, 'congrats')}>
                 <Icons.congrats className="mr-2 h-4 w-4" /> Congrats ({post.reactions.congrats || 0})
             </Button>
             <Button variant="outline" size="sm" onClick={() => addReaction(post.id, 'bestOfLuck')}>
                 <Icons.bestOfLuck className="mr-2 h-4 w-4" /> Luck ({post.reactions.bestOfLuck || 0})
             </Button>
+            {post.type === 'HACKATHON' && !isAuthor && (
+              <Button variant={isPostLiked(post.id) ? "secondary" : "outline"} size="sm" onClick={() => toggleLikePost(post.id)}>
+                <Bookmark className={`mr-2 h-4 w-4 ${isPostLiked(post.id) ? 'fill-primary text-primary' : ''}`} /> 
+                {isPostLiked(post.id) ? 'Saved' : 'Save'}
+              </Button>
+            )}
       </div>
     </CardFooter>
   );

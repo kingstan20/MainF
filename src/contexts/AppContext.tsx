@@ -15,13 +15,15 @@ interface AppContextType {
   loading: boolean;
   login: (email: string, password_plaintext: string) => Promise<void>;
   logout: () => void;
-  register: (userData: Omit<User, 'id' | 'privacy' | 'hackathonsAttended' | 'collaborations' | 'wins' | 'skills'>) => Promise<void>;
+  register: (userData: Omit<User, 'id' | 'privacy' | 'hackathonsAttended' | 'collaborations' | 'wins' | 'skills' | 'likedPostIds'>) => Promise<void>;
   updateUser: (userId: string, updatedData: Partial<User>) => void;
   addPost: (postData: Omit<Post, 'id' | 'authorId' | 'authorName' | 'authorAvatarUrl' | 'createdAt' | 'views' | 'reactions'>) => void;
   incrementView: (postId: string) => void;
   addReaction: (postId: string, reactionType: keyof Post['reactions']) => void;
   startChat: (email: string, name: string) => void;
   getUserById: (userId: string) => User | undefined;
+  toggleLikePost: (postId: string) => void;
+  isPostLiked: (postId: string) => boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -61,7 +63,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     router.push('/');
   };
 
-  const register = async (userData: Omit<User, 'id' | 'privacy' | 'hackathonsAttended' | 'collaborations' | 'wins' | 'skills'>) => {
+  const register = async (userData: Omit<User, 'id' | 'privacy' | 'hackathonsAttended' | 'collaborations' | 'wins' | 'skills' | 'likedPostIds'>) => {
     const existingUser = users.find(u => u.email === userData.email);
     if (existingUser) {
       toast({ variant: "destructive", title: "Registration Failed", description: "An account with this email already exists." });
@@ -76,6 +78,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       collaborations: 0,
       wins: 0,
       skills: [],
+      likedPostIds: [],
     };
     
     setUsers(prevUsers => [...prevUsers, newUser]);
@@ -142,6 +145,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const getUserById = (userId: string) => users.find(u => u.id === userId);
 
+  const toggleLikePost = (postId: string) => {
+    if (!currentUserProfile) return;
+    
+    const likedPostIds = currentUserProfile.likedPostIds || [];
+    const isLiked = likedPostIds.includes(postId);
+    
+    let newLikedPostIds;
+    if (isLiked) {
+      newLikedPostIds = likedPostIds.filter(id => id !== postId);
+      toast({ title: "Removed from Calendar", description: "This hackathon has been removed from your calendar." });
+    } else {
+      newLikedPostIds = [...likedPostIds, postId];
+      toast({ title: "Saved to Calendar", description: "You can view this hackathon in your calendar." });
+    }
+    
+    updateUser(currentUserProfile.id, { likedPostIds: newLikedPostIds });
+  };
+
+  const isPostLiked = (postId: string) => {
+    return currentUserProfile?.likedPostIds?.includes(postId) || false;
+  };
+
   const value = {
     users,
     posts,
@@ -156,7 +181,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     incrementView,
     addReaction,
     getUserById,
-    startChat
+    startChat,
+    toggleLikePost,
+    isPostLiked,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -10,6 +10,7 @@ export interface User {
   hackathonsAttended: string[];
   collaborations: number;
   wins: number;
+  likedPostIds?: string[];
 }
 
 export type PostType = 'HACKATHON' | 'TEAMMATE' | 'COLLABORATION' | 'FAME';

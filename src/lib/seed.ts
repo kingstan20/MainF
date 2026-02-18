@@ -13,6 +13,7 @@ export const seedUsers: User[] = [
     hackathonsAttended: ['post_1', 'post_2', 'post_5'],
     collaborations: 2,
     wins: 1,
+    likedPostIds: ['post_3', 'post_8', 'post_11'],
   },
   {
     id: 'user_2',
@@ -26,6 +27,7 @@ export const seedUsers: User[] = [
     hackathonsAttended: ['post_1', 'post_5'],
     collaborations: 1,
     wins: 1,
+    likedPostIds: [],
   },
 ];
 

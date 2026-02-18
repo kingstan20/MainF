@@ -21,6 +21,7 @@ export function Navbar() {
 
   const navItems = [
     { href: '/feed', label: 'Feed' },
+    { href: '/calendar', label: 'Calendar' },
     { href: '/profile', label: 'Profile' },
     { href: '/settings', label: 'Settings' },
   ];

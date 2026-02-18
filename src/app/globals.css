@@ -64,4 +64,14 @@
   .glowing-border-hover {
     @apply transition-all duration-300 hover:border-accent/50 hover:shadow-accent/20;
   }
+  .event-day {
+    @apply relative;
+  }
+  .event-day::after {
+    content: '';
+    @apply absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary;
+  }
+  .event-day[aria-selected="true"]::after {
+    @apply bg-primary-foreground;
+  }
 }
