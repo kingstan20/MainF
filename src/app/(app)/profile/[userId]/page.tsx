@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 export default function UserProfilePage() {
     const { getUserById, currentUserProfile, posts, startChat } = useAppContext();
     const params = useParams();
-    const router = useRouter();
+    const { replace } = useRouter();
     const userId = params.userId as string;
 
     const [user, setUser] = useState<User | null | undefined>(undefined);
@@ -23,13 +23,13 @@ export default function UserProfilePage() {
     useEffect(() => {
         if (userId) {
             if (userId === currentUserProfile?.id) {
-                router.replace('/profile');
+                replace('/profile');
                 return;
             }
             const foundUser = getUserById(userId);
             setUser(foundUser || null);
         }
-    }, [userId, getUserById, currentUserProfile, router]);
+    }, [userId, getUserById, currentUserProfile, replace]);
     
     if (user === undefined) {
         return <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin"/></div>;
